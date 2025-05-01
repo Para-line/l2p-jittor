@@ -2,6 +2,30 @@
 This repository contains a Jittor implementation of the "Learning to Prompt for Continual Learning" (L2P) paper.
 
 ## Prerequisites
+
+### Obtaining Pre-trained Parameters
+The pre-trained model parameters for this project are large and managed using **Git Large File Storage (LFS)**.
+
+#### Method 1: Using Git LFS:
+
+To ensure you download these large files correctly when cloning the repository, you should first install and set up Git LFS.
+
+**For Ubuntu/Debian systems:** Open your terminal and run the following commands:
+```
+sudo apt install git-lfs
+git lfs install # This command installs the necessary Git hooks.
+```
+
+Once Git LFS is installed and initialized, you can clone the repository as usual.
+
+#### Method 2: Manual Download
+
+If you prefer not to install Git LFS, or if you encounter issues with it, you can download the parameter files manually:
+
+1. Navigate to the parameter files (under `params/`) in the GitHub repository's web interface.
+2. Download the parameter files.
+3. Place the parameter files under the `params/` directory within your local copy of the project repository.
+
 ### Environment
 
 The code was developed and tested using the following environment:
@@ -20,9 +44,9 @@ tensorboard==2.19.0
 pillow==9.2.0
 ```
 
-### Change tensorboard directory
+### Change TensorBoard Directory
 
-You may need to modify `tensorboard_dir` argument at `configs/cifar100_l2p.py`
+You may need to modify the `tensorboard_dir` argument at `configs/cifar100_l2p.py`
 
 ```
 subparsers.add_argument('--tensorboard_dir', default='/root/tf-logs/', help='directory where TensorBoard logs will be saved.')
@@ -104,16 +128,16 @@ During development and testing, the following issues related to the Jittor frame
 ### Issue 1: Platform-Specific Behavior of `index_fill_`
 
 *   **File:** `issues/issue1.py`
-*   **Description:** The in-place operation `jt.index_fill_` fails to produce the expected results when run on a Windows operating system utilizing an AMD CPU.
+*   **Description:** The operation `jt.index_fill_` fails to produce the expected results when run on a Windows operating system utilizing an AMD CPU.
 *   **Note:** Correct behavior was observed when the same code was executed on the server.
 
 ### Issue 2: Numerical Precision Issues in Summation
 
 *   **File:** `issues/issue2.py`
-*   **Description:** Discrepancies were observed when calculating the sum of tensor elements. Methods including `x.sum()`, `jt.sum(x)`, and summation via a standard Python loop produced results deviating from the expected value by up to 1e-5.
+*   **Description:** Numerical precision issues observed in tensor summation. The framework's methods x.sum() and jt.sum(x) produce results that differ both from each other and from the sum calculated via a standard Python loop, with deviations reaching up to 1e-5 in both comparisons.
 *   **Control Case:** `issue2_control.py` provides a comparison using PyTorch, where similar summation operations do not show this precision degradation.
 
 ### Related Issue: Precision and Reproducibility with `jt.set_global_seed`
 
-*   **Description:** Setting the global random seed using `jt.set_global_seed` does not guarantee perfect reproducibility due to precision issues in the generated random numbers.
+*   **Description:** Setting the global random seed using `jt.set_global_seed` does not guarantee perfect reproducibility also due to precision issues in the generated random numbers.
 *   **Observation:** Errors up to 1e-5 have been noted in the generated values. This can lead to significant divergence in outcomes over multiple runs.
