@@ -1,0 +1,119 @@
+# L2P Jittor Implementation  
+This repository contains a Jittor implementation of the "Learning to Prompt for Continual Learning" (L2P) paper.
+
+## Prerequisites
+### Environment
+
+The code was developed and tested using the following environment:
+
+- Ubuntu 20.04.5 LTS
+- NVIDIA GeForce RTX 4090
+- Python 3.9.0
+
+### Required Packages
+
+Install the necessary packages using pip:
+
+```
+jittor==1.3.9.14 # numpy will be installed as a dependency of jittor
+tensorboard==2.19.0
+pillow==9.2.0
+```
+
+### Change tensorboard directory
+
+You may need to modify `tensorboard_dir` argument at `configs/cifar100_l2p.py`
+
+```
+subparsers.add_argument('--tensorboard_dir', default='/root/tf-logs/', help='directory where TensorBoard logs will be saved.')
+```
+
+## Usage
+### Training
+
+```
+python main.py \
+       cifar100_l2p \
+       --model vit_base_patch16_224 \
+       --batch-size 16 \
+       --data-path /local_datasets/ \
+       --output_dir ./output
+```
+
+### Evaluation
+
+```
+python main.py cifar100_l2p --eval
+```
+## Result  
+### Split-CIFAR100  
+
+Pytorch Implementation Final Log:
+
+```
+{
+	"cumulative_time": "0:20:40",
+	"avg_epoch_times_sec": 22.18s,
+	"final_accuracy_matrix": [
+		[97.9, 93.4, 91.4, 89.8, 88.6, 86.6, 87.1, 86.1, 84.3, 85.0], 
+		[ 0.0, 94.9, 91.9, 88.7, 87.3, 85.4, 83.6, 84.2, 82.4, 81.2], 
+		[ 0.0,  0.0, 90.7, 89.6, 85.6, 85.0, 83.2, 82.9, 82.1, 82.9], 
+		[ 0.0,  0.0,  0.0, 89.6, 88.2, 86.9, 86.8, 85.2, 85.1, 84.7], 
+		[ 0.0,  0.0,  0.0,  0.0, 90.9, 92.6, 90.4, 90.2, 88.6, 88.1], 
+		[ 0.0,  0.0,  0.0,  0.0,  0.0, 81.3, 80.4, 79.0, 79.5, 78.4], 
+		[ 0.0,  0.0,  0.0,  0.0,  0.0,  0.0, 88.1, 83.4, 83.6, 81.0], 
+		[ 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0, 84.6, 83.6, 81.0], 
+		[ 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0, 89.9, 88.0], 
+		[ 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0, 87.9]
+	],
+	"avg_incremental_accuracy": 89.58%,
+	"avg_final_accuracy": 83.82%,
+	"final_avg_forgetting": 6.59%
+}
+```
+
+Jittor Implementation Final Log:
+
+```
+{  
+	"cumulative_time": "0:29:36",  
+	"avg_epoch_times_sec": 31.09s,  
+	"final_accuracy_matrix": [  
+		[98.5, 95.7, 93.5, 92.7, 92.0, 91.1, 89.6, 88.9, 87.1, 87.5], 
+		[ 0.0, 94.7, 93.1, 89.9, 88.1, 85.8, 85.0, 84.3, 83.9, 82.7], 
+		[ 0.0,  0.0, 89.0, 88.6, 86.6, 86.3, 85.2, 84.1, 83.6, 83.0], 
+		[ 0.0,  0.0,  0.0, 88.9, 88.3, 84.6, 83.3, 83.4, 81.3, 78.9], 
+		[ 0.0,  0.0,  0.0,  0.0, 90.8, 89.9, 89.5, 89.1, 87.4, 86.9], 
+		[ 0.0,  0.0,  0.0,  0.0,  0.0, 82.5, 81.3, 79.8, 80.8, 77.7], 
+		[ 0.0,  0.0,  0.0,  0.0,  0.0,  0.0, 84.5, 82.4, 81.5, 80.3], 
+		[ 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0, 84.6, 82.6, 80.0], 
+		[ 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0, 93.1, 90.6], 
+		[ 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0, 86.3]
+	],  
+	"avg_incremental_accuracy": 89.29%,  
+	"avg_final_accuracy": 83.39%,  
+	"final_avg_forgetting": 6.56%
+}
+```
+
+**Note:** Detailed training logs, including metrics per epoch, can be visualized using TensorBoard by pointing it to the `tensorboard-logs` directory.
+
+## Known Issues and Observations
+During development and testing, the following issues related to the Jittor framework were observed:
+
+### Issue 1: Platform-Specific Behavior of `index_fill_`
+
+*   **File:** `issues/issue1.py`
+*   **Description:** The in-place operation `jt.index_fill_` fails to produce the expected results when run on a Windows operating system utilizing an AMD CPU.
+*   **Note:** Correct behavior was observed when the same code was executed on the server.
+
+### Issue 2: Numerical Precision Issues in Summation
+
+*   **File:** `issues/issue2.py`
+*   **Description:** Discrepancies were observed when calculating the sum of tensor elements. Methods including `x.sum()`, `jt.sum(x)`, and summation via a standard Python loop produced results deviating from the expected value by up to 1e-5.
+*   **Control Case:** `issue2_control.py` provides a comparison using PyTorch, where similar summation operations do not show this precision degradation.
+
+### Related Issue: Precision and Reproducibility with `jt.set_global_seed`
+
+*   **Description:** Setting the global random seed using `jt.set_global_seed` does not guarantee perfect reproducibility due to precision issues in the generated random numbers.
+*   **Observation:** Errors up to 1e-5 have been noted in the generated values. This can lead to significant divergence in outcomes over multiple runs.
